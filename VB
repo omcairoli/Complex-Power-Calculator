@@ -1,0 +1,441 @@
+'----------------------------------------------------------------------------------
+' Name: Complex Power Calculator
+'
+' Purpose: This routine converts Rectangular coordinates to Polar coordinates (R2P)
+' and vise versa (P2Rd).
+'
+' Algorithm:
+'
+' Inputs:
+'
+' Outputs:
+'
+' Interface Assumption: Windows 7
+'
+' Modification History: Created an "add" button to do quick summations of complex numbers
+'
+' Author: Oscar M. Cairoli
+'
+' Date Created: 6/15/2015
+'
+' Date Revised: 7/24/2015
+'
+' Revision: D
+'-----------------------------------------------------------------------------------
+
+Option Explicit
+
+'-----------------------------------------------------------------------------------
+'Variable Declarations
+'-----------------------------------------------------------------------------------
+ Dim RealPwr As Double
+ Dim ReactPwr As Double
+ Dim AppPwr As Double
+ Dim RectVal As String
+ Dim AngDeg As Double
+ Dim AngRad As Double
+ Dim Phi As Double
+ Dim Phi2 As Double
+ Dim Bus_Phi As Double
+ Dim Mag As Double
+ Dim PwrFctr_P2Rd As Double
+ Dim PwrFctr_R2P As Double
+ Dim PwrFctr_Bus As Double
+ Dim PwrFctr_BusTotal As Double
+ Dim Cmplx As String
+ Dim Cmplx2 As String
+ Dim P As Double
+ Dim P_Bus As Double
+ Dim P_Bus_Tot As Double
+ Dim Q As Double
+ Dim Q_Bus As Double
+ Dim Q_Bus_Tot As Double
+ Dim Iac As Double
+ Dim S_Bus As Double
+ Dim S_BusTotal As Double
+ Dim AddReal As Double
+ Dim AddImag As Double
+ Dim AddRealTmp As Double
+ Dim AddImagTmp As Double
+ Dim cht As ChartObject
+ Dim fileSaveName, fName
+ Const Vac = 115
+ Const pi = 3.14159265358979
+
+Private Sub clr_Click()
+    
+    '------------------------------
+    'Clear command button for R2P
+    '------------------------------
+
+    TextBox1.Value = Null
+    TextBox2.Value = Null
+    TextBox3.Value = Null
+    TextBox4.Value = Null
+    TextBox5.Value = Null
+    TextBox10.Value = Null
+    
+    'Reset Temp variables when clear button is clicked
+    RealPwr = 0
+    ReactPwr = 0
+
+End Sub
+
+Private Sub clr2_Click()
+
+    '------------------------------
+    'Clear command button for P2Rd
+    '------------------------------
+
+    TextBox6.Value = Null
+    TextBox7.Value = Null
+    TextBox8.Value = Null
+    TextBox9.Value = Null
+    TextBox11.Value = Null
+    TextBox12.Value = Null
+    TextBox13.Value = Null
+    TextBox14.Value = Null
+    TextBox15.Value = Null
+    TextBox16.Value = Null
+
+End Sub
+
+Private Sub cmdInst_Click()
+
+    Examples.Show
+    
+End Sub
+
+Private Sub cmdInfo_Click()
+
+    Info.Show
+
+End Sub
+
+Private Sub cmdAbout_Click()
+
+    Info.Show
+
+End Sub
+
+Private Sub cmdExamples_Click()
+
+    Examples.Show
+
+End Sub
+
+Private Sub cmdP2Rd_Click()
+ 
+'--------------------------------------------------------------------------------------------
+' Written By....: Oscar M. Cairoli
+' Purpose.......: Converts Polar to Rectangular coordinates
+' Inputs........: P2Rd: Input a Mag & Angle (Degrees)
+' ..............: P2Rd: Input a Mag & Power Factor
+' Outputs.......: Returns complex power in rectangular coordinates (kVA)
+'--------------------------------------------------------------------------------------------
+      
+    '----------------------------------------------------------------------------------------
+    'Begin While loop to check if PF or Phase is given
+    '----------------------------------------------------------------------------------------
+    
+    Do While True
+        'Returns a complex value if the phase is given by the user
+        If Len(TextBox6 & vbNullString) <> 0 And Len(TextBox7 & vbNullString) <> 0 _
+            And Len(TextBox8 & vbNullString) = 0 Then
+                Mag = TextBox6.Value
+                Phi = TextBox7.Value
+                P = Mag * Cos(Phi * pi / 180)
+                Q = Mag * Sin(Phi * pi / 180)
+                
+                Cmplx = Application.WorksheetFunction.Complex _
+                    (Application.WorksheetFunction.Round(P + 0.000001, 2), _
+                        Application.WorksheetFunction.Round(Q + 0.000001, 2), "j")
+                        
+                'Returns current in milliAmps
+                Iac = (Mag / Vac) * 1000
+                Iac = Application.WorksheetFunction.Round(Iac + 0.000001, 2)
+                
+                'Check for input values for Bus Load
+                If Len(TextBox13 & vbNullString) <> 0 And Len(TextBox15 & vbNullString) <> 0 Then
+                    S_Bus = TextBox13.Value
+                    PwrFctr_Bus = TextBox15.Value
+                    Bus_Phi = Application.WorksheetFunction.Acos(PwrFctr_Bus)
+                    P_Bus = S_Bus * PwrFctr_Bus
+                    Q_Bus = S_Bus * Sqr(1 - (PwrFctr_Bus) ^ 2)
+                    S_BusTotal = Application.WorksheetFunction.ImAbs( _
+                        Application.WorksheetFunction.Complex( _
+                            (P + P_Bus), (Q + Q_Bus)))
+                    PwrFctr_BusTotal = Cos(Application.WorksheetFunction.ImArgument( _
+                        Application.WorksheetFunction.Complex( _
+                            (P + P_Bus), (Q + Q_Bus))))
+                End If
+                
+                'Output Values
+                TextBox9.Text = Application.WorksheetFunction.Round(P + 0.000001, 2)
+                TextBox11.Text = Application.WorksheetFunction.Round(Q + 0.000001, 2)
+                TextBox12.Text = Application.WorksheetFunction.Round(S_BusTotal + 0.000001, 2)
+                TextBox16.Text = Application.WorksheetFunction.Round(PwrFctr_BusTotal + 0.000001, 2)
+                TextBox14.Text = Iac
+                Exit Do
+        
+        'Gives a response if both PF and Phase are given
+        ElseIf Len(TextBox7 & vbNullString) <> 0 And Len(TextBox8 & vbNullString) <> 0 Then
+            'While loop checks if a magnitude value has been given by the user
+            Do While True
+                If TextBox6 = vbNullString Then
+                    MsgBox "You must enter a magnitude value."
+                    Exit Do
+                Else
+                    MsgBox "You have entered too many values. Try again."
+                    
+                    'Output Values
+                    TextBox7.Value = Null
+                    TextBox8.Value = Null
+                    TextBox9.Value = Null
+                    TextBox11.Value = Null
+                    Exit Do
+                End If
+            Loop
+    Exit Do
+    
+        'Returns a complex value if Power Factor is given
+        ElseIf Len(TextBox6 & vbNullString) <> 0 And Len(TextBox8 & vbNullString) <> 0 _
+            And Len(TextBox7 & vbNullString) = 0 Then
+                'Statement checks to see if the Power Factor is less than 0, greater than 1
+                If TextBox8.Value < 0 Or TextBox8.Value > 1 Then
+                    MsgBox "Enter a Power Factor value between 0 and 1."
+                    Exit Do
+                Else
+                    Mag = TextBox6.Value
+                    PwrFctr_P2Rd = TextBox8.Value
+                    Phi2 = Application.WorksheetFunction.Acos(PwrFctr_P2Rd)
+                    P = Mag * PwrFctr_P2Rd
+                    
+                    'Check if Real Power > or < 0 for pos or neg reactance
+                    If P > 0 Or P = 0 Then
+                        Q = Mag * Sqr(1 - (PwrFctr_P2Rd) ^ 2)
+                        Cmplx = Application.WorksheetFunction.Complex _
+                            (Application.WorksheetFunction.Round(P + 0.000001, 2), _
+                                Application.WorksheetFunction.Round(Q + 0.000001, 2), "j")
+                    Else
+                        Q = (-1) * (Mag * Sin(Phi2))
+                        Cmplx = Application.WorksheetFunction.Complex _
+                            (Application.WorksheetFunction.Round(P + 0.000001, 2), _
+                                Application.WorksheetFunction.Round(Q + 0.000001, 2), "j")
+                    End If
+                    
+                    'Returns current in milliAmps
+                    Iac = (Mag / Vac) * 1000
+                    Iac = Application.WorksheetFunction.Round(Iac + 0.000001, 2)
+                    
+                    'Check for input values for Bus Load and Bus Power Factor
+                    If Len(TextBox13 & vbNullString) <> 0 And Len(TextBox15 & vbNullString) <> 0 Then
+                        S_Bus = TextBox13.Value
+                        PwrFctr_Bus = TextBox15.Value
+                        Bus_Phi = Application.WorksheetFunction.Acos(PwrFctr_Bus)
+                        P_Bus = S_Bus * PwrFctr_Bus
+                        Q_Bus = S_Bus * Sqr(1 - (PwrFctr_Bus) ^ 2)
+                        S_BusTotal = Application.WorksheetFunction.ImAbs( _
+                            Application.WorksheetFunction.Complex( _
+                                (P + P_Bus), (Q + Q_Bus)))
+                        PwrFctr_BusTotal = Cos(Application.WorksheetFunction.ImArgument( _
+                            Application.WorksheetFunction.Complex( _
+                                (P + P_Bus), (Q + Q_Bus))))
+                    End If
+                        
+                    'Output Values
+                    TextBox9.Text = Application.WorksheetFunction.Round(P + 0.000001, 2)
+                    TextBox11.Text = Application.WorksheetFunction.Round(Q + 0.000001, 2)
+                    TextBox14.Text = Iac
+                    TextBox12.Text = Application.WorksheetFunction.Round(S_BusTotal + 0.000001, 2)
+                    TextBox16.Text = Application.WorksheetFunction.Round(PwrFctr_BusTotal + 0.000001, 2)
+                    Exit Do
+                    
+                End If
+        'Gives a response to the user if nothing is entered
+        ElseIf Len(TextBox6) = 0 And Len(TextBox7) = 0 And Len(TextBox8) = 0 Then
+            Exit Do
+        Else
+            MsgBox "Must enter a Phase or a Power Factor value."
+            Exit Do
+        End If
+    Exit Do
+    Loop
+      
+End Sub
+
+Private Sub cmdR2P_Click()
+
+'--------------------------------------------------------------------------------------------
+' Written By....: Oscar M. Cairoli
+' Purpose.......: Converts Polar to Rectangular coordinates & vice versa
+' Inputs........: R2P: Takes a Real (kW) & Reactive (kVAR) value
+' Outputs.......: Returns Apparent power (kVA) & Angle (Degrees & Radians), Current in mA
+'--------------------------------------------------------------------------------------------
+    
+    'Assign Real & Reactive values
+    Do While True
+        'Statement checks for missing Real value
+        If Len(TextBox1 & vbNullString) = 0 And Len(TextBox2 & vbNullString) <> 0 Then
+            MsgBox "You must enter a Real value."
+            Exit Do
+        
+        'Statement checks for missing Reactive value
+        ElseIf Len(TextBox1 & vbNullString) <> 0 And Len(TextBox2 & vbNullString) = 0 Then
+            MsgBox "You must enter a Reactive value."
+            Exit Do
+            
+        'Program executes if both Real and Reactive values are provided
+        ElseIf Len(TextBox1 & vbNullString) <> 0 And Len(TextBox2 & vbNullString) <> 0 Then
+            AddRealTmp = TextBox1.Value
+            AddImagTmp = TextBox2.Value
+            
+            RealPwr = RealPwr + AddRealTmp
+            ReactPwr = ReactPwr + AddImagTmp
+    
+            'Convert from Polar to Rectangular Coordinates
+            RectVal = Application.WorksheetFunction.Complex(RealPwr, ReactPwr, "j")
+            AppPwr = Application.WorksheetFunction.ImAbs(RectVal)
+            AppPwr = Application.WorksheetFunction.Round(AppPwr + 0.000001, 2)
+    
+            'Angle in radians
+            AngRad = Application.WorksheetFunction.ImArgument(RectVal)
+            AngRad = Application.WorksheetFunction.Round(AngRad + 0.000001, 2)
+            
+            'Angle in degrees
+            AngDeg = (AngRad * 180) / pi
+            AngDeg = Application.WorksheetFunction.Round(AngDeg + 0.000001, 2)
+            
+            'Power Factor Calculation
+            PwrFctr_R2P = Abs(Cos(AngRad))
+            PwrFctr_R2P = Application.WorksheetFunction.Round(PwrFctr_R2P + 0.000001, 2)
+            
+            'Returns a string "Lagging" if ReactPwr > 0 And phi > 0
+            'Returns a string "Unity" if ReactPwr = 0 And phi = 0
+            'Returns a string "Leading" if ReactPwr < 0 And phi < 0
+            If AngDeg > 0 And ReactPwr > 0 Then
+                TextBox5.Text = "lagging"
+            ElseIf AngDeg = 0 And ReactPwr = 0 Then
+                TextBox5.Text = "unity"
+            Else
+                TextBox5.Text = "leading"
+            End If
+            
+            'Output Values
+            TextBox3.Text = AppPwr
+            TextBox4.Text = AngDeg
+            TextBox10.Text = PwrFctr_R2P
+            
+        End If
+    Exit Do
+    Loop
+    
+End Sub
+
+Private Sub cmdUnits_Click()
+
+    Units.Show
+
+End Sub
+
+Private Sub ComboBox1_Change()
+
+End Sub
+
+'----------------------------------------------------------------------
+' Sub routine to inform user to enter a numeric value
+'----------------------------------------------------------------------
+
+Private Sub TextBox1_KeyPress(ByVal KeyAscii As MSForms.ReturnInteger)
+    
+    'Checks numeric values 0-9, negative sign, and period
+    If (KeyAscii > 47 And KeyAscii < 58) Or KeyAscii = 45 Or KeyAscii = 46 Then
+        KeyAscii = KeyAscii
+        
+    Else
+        KeyAscii = 0
+        MsgBox "Invalid Key pressed. Please enter a numeric value."
+    End If
+
+End Sub
+
+Private Sub TextBox13_KeyPress(ByVal KeyAscii As MSForms.ReturnInteger)
+'----------------------------------------------------------------------
+' Sub routine to inform user to enter a numeric value
+'----------------------------------------------------------------------
+   'Checks numeric values 0-9 and period
+    If (KeyAscii > 47 And KeyAscii < 58) Or KeyAscii = 46 Then
+        KeyAscii = KeyAscii
+        
+    Else
+        KeyAscii = 0
+        MsgBox "Invalid Key pressed. Please enter a numeric value."
+    End If
+
+End Sub
+Private Sub TextBox2_KeyPress(ByVal KeyAscii As MSForms.ReturnInteger)
+'----------------------------------------------------------------------
+' Sub routine to inform user to enter a numeric value
+'----------------------------------------------------------------------
+
+    'Checks numeric values 0-9, negative sign, and period
+    If (KeyAscii > 47 And KeyAscii < 58) Or KeyAscii = 45 Or KeyAscii = 46 Then
+        KeyAscii = KeyAscii
+        
+    Else
+        KeyAscii = 0
+        MsgBox "Invalid Key pressed. Please enter a numeric value."
+    End If
+
+End Sub
+
+Private Sub TextBox6_KeyPress(ByVal KeyAscii As MSForms.ReturnInteger)
+'-----------------------------------------------------------------------
+' Sub routine to inform user to enter a numeric value
+'-----------------------------------------------------------------------
+    
+    'Checks numeric values 0-9 and period
+    If (KeyAscii > 47 And KeyAscii < 58) Or KeyAscii = 46 Then
+        KeyAscii = KeyAscii
+        
+    Else
+        KeyAscii = 0
+        MsgBox "Invalid Key pressed. Please enter a numeric value."
+    End If
+
+End Sub
+Private Sub TextBox7_KeyPress(ByVal KeyAscii As MSForms.ReturnInteger)
+'-----------------------------------------------------------------------
+' Sub routine to inform user to enter a numeric value
+'-----------------------------------------------------------------------
+
+    'Checks numeric values 0-9, negative sign, and period
+    If (KeyAscii > 47 And KeyAscii < 58) Or KeyAscii = 45 Or KeyAscii = 46 Then
+        KeyAscii = KeyAscii
+        
+    Else
+        KeyAscii = 0
+        MsgBox "Invalid Key pressed. Please enter a numeric value."
+    End If
+
+End Sub
+Private Sub TextBox8_KeyPress(ByVal KeyAscii As MSForms.ReturnInteger)
+'-------------------------------------------------------------------------
+' Sub routine to inform user to enter a numeric value
+'-------------------------------------------------------------------------
+
+    'Checks numeric values 0-9, and period
+    If (KeyAscii > 47 And KeyAscii < 58) Or KeyAscii = 46 Then
+        KeyAscii = KeyAscii
+        
+    Else
+        KeyAscii = 0
+        MsgBox "Invalid Key pressed. Please enter a numeric value."
+    End If
+
+End Sub
+
+
+Private Sub txtTitle_Click()
+
+End Sub
